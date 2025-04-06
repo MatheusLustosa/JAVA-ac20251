@@ -1,3 +1,5 @@
+package br.edu.cs.poo.ac.seguro.entidades;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
