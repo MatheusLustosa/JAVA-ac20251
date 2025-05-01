@@ -15,27 +15,27 @@ public class SeguradoMediator {
 
     public String validarNome(String nome) {
         if (StringUtils.ehNuloOuBranco(nome)) {
-            return "Nome inválido.";
+            return "Nome deve ser informado";
         }
         return null;
     }
 
     public String validarEndereco(Endereco endereco) {
-        if (endereco == null) return "Endereço não pode ser nulo.";
+        if (endereco == null) return "Endereço deve ser informado";
         if (StringUtils.ehNuloOuBranco(endereco.getLogradouro())) {
-            return "Logradouro inválido.";
+            return "Logradouro deve ser informado";
         }
         if (StringUtils.ehNuloOuBranco(endereco.getNumero())) {
-            return "Número do endereço inválido.";
+            return "Sigla do estado deve ser informada";
         }
         if (StringUtils.ehNuloOuBranco(endereco.getCep())) {
-            return "CEP inválido.";
+            return "CEP deve ser informado";
         }
         if (StringUtils.ehNuloOuBranco(endereco.getCidade())) {
-            return "Cidade inválida.";
+            return "Cidade deve ser informada";
         }
         if (StringUtils.ehNuloOuBranco(endereco.getEstado())) {
-            return "Estado inválido.";
+            return "Sigla do estado deve ser informada";
         }
         if (StringUtils.ehNuloOuBranco(endereco.getPais())) {
             return "País inválido.";
@@ -44,7 +44,7 @@ public class SeguradoMediator {
     }
 
     public String validarDataCriacao(LocalDate dataCriacao) {
-        if (dataCriacao == null) return "Data de criação não pode ser nula.";
+        if (dataCriacao == null) return "Data do nascimento deve ser informada";
         if (dataCriacao.isAfter(LocalDate.now())) return "Data de criação não pode ser futura.";
         return null;
     }

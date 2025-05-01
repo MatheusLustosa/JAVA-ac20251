@@ -16,7 +16,14 @@ public class SeguradoPessoaMediator {
     }
 
     public String validarCpf(String cpf) {
-        return ValidadorCpfCnpj.ehCpfValido(cpf);
+        if (StringUtils.ehNuloOuBranco(cpf))
+            return "CPF deve ser informado";
+        if (cpf.length() != 11)
+            return "CPF deve ter 11 caracteres";
+        if (!ValidadorCpfCnpj.ehCpfValido(cpf))
+            return "CPF com dígito inválido";
+
+        return null;
     }
 
     public String validarSeguradoPessoa(SeguradoPessoa seg) {
@@ -36,7 +43,7 @@ public class SeguradoPessoaMediator {
         if (msg != null) return msg;
 
         if (seg.getRenda() <= 0) {
-            return "Renda deve ser maior que zero.";
+            return "Renda deve ser maior ou igual à zero";
         }
 
         return null;
@@ -53,7 +60,7 @@ public class SeguradoPessoaMediator {
 
         boolean sucesso = seguradoPessoaDAO.incluir(seg);
         if (!sucesso) {
-            return "Segurado pessoa já existente.";
+            return "CPF do segurado pessoa já existente";
         }
         return null;
     }
@@ -64,7 +71,7 @@ public class SeguradoPessoaMediator {
 
         boolean sucesso = seguradoPessoaDAO.alterar(seg);
         if (!sucesso) {
-            return "Segurado pessoa não encontrado.";
+            return "CPF do segurado pessoa não existente";
         }
         return null;
     }
@@ -72,7 +79,7 @@ public class SeguradoPessoaMediator {
     public String excluirSeguradoPessoa(String cpf) {
         boolean sucesso = seguradoPessoaDAO.excluir(cpf);
         if (!sucesso) {
-            return "Segurado pessoa não encontrado.";
+            return "CPF do segurado pessoa não existente";
         }
         return null;
     }
