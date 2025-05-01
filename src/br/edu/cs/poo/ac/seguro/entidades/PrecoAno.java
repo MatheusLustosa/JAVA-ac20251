@@ -1,5 +1,8 @@
 package br.edu.cs.poo.ac.seguro.entidades;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class PrecoAno {
     private int ano;
     private double preco;
@@ -14,5 +17,9 @@ public class PrecoAno {
     }
     public double getPreco() {
         return preco;
+    }
+
+    public BigDecimal getValor() {
+        return BigDecimal.valueOf(preco).setScale(2, RoundingMode.HALF_UP);
     }
 }

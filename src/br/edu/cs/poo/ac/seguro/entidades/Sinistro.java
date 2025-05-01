@@ -3,6 +3,7 @@ package br.edu.cs.poo.ac.seguro.entidades;
 import lombok.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,4 +20,8 @@ public class Sinistro implements Serializable{
     private String usuarioRegistro;
     private BigDecimal valorSinistro;
     private TipoSinistro tipo;
+
+    public LocalDate getDataHora() {
+        return this.dataHoraSinistro.toLocalDate();
+    }
 }

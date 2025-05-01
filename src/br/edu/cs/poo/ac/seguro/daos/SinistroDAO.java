@@ -3,6 +3,9 @@ package br.edu.cs.poo.ac.seguro.daos;
 import br.edu.cesarschool.next.oo.persistenciaobjetos.CadastroObjetos;
 import br.edu.cs.poo.ac.seguro.entidades.Sinistro;
 
+import java.util.List;
+import java.util.Arrays;
+
 public class SinistroDAO extends DAOGenerico {
 
     public SinistroDAO() {
@@ -10,7 +13,7 @@ public class SinistroDAO extends DAOGenerico {
     }
 
     public Sinistro buscar(String numero) {
-        return (Sinistro)cadastro.buscar(numero);
+        return (Sinistro) cadastro.buscar(numero);
     }
 
     public boolean incluir(Sinistro sinistro) {
@@ -40,4 +43,9 @@ public class SinistroDAO extends DAOGenerico {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Sinistro> buscarTodos() {
+        Object[] array = cadastro.buscarTodos();
+        return Arrays.asList(Arrays.copyOf(array, array.length, Sinistro[].class));
+    }
 }
