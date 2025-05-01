@@ -3,7 +3,7 @@ package br.edu.cs.poo.ac.seguro.mediators;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.List;
 
 import br.edu.cs.poo.ac.seguro.daos.*;
 import br.edu.cs.poo.ac.seguro.entidades.*;
@@ -104,9 +104,10 @@ public class ApoliceMediator {
         Apolice apolice = new Apolice(numero, veiculo, franquia, premio, dados.getValorMaximoSegurado(), dataInicio);
         daoApo.incluir(apolice);
 
-        Veiculo finalVeiculo = veiculo;
-        boolean teveSinistroAnterior = daoSin.buscarTodos().stream()
-                .anyMatch(s -> s.getVeiculo().equals(finalVeiculo)
+        List<Sinistro> sinistros = daoSin.buscarTodos();
+        final Veiculo veiculoFinal = veiculo;
+        boolean teveSinistroAnterior = sinistros.stream()
+                .anyMatch(s -> s.getVeiculo().equals(veiculoFinal)
                         && s.getDataHora().getYear() == dataInicio.minusYears(1).getYear());
 
         if (!teveSinistroAnterior) {
@@ -128,18 +129,19 @@ public class ApoliceMediator {
     }
 
     public String excluirApolice(String numero) {
-        if (numero == null || numero.trim().isEmpty()) return "Número da apólice deve ser informado";
+        if (numero == null || numero.trim().isEmpty()) return "Número deve ser informado";
         Apolice apolice = daoApo.buscar(numero);
         if (apolice == null) return "Apólice inexistente";
 
-        Veiculo veiculo = apolice.getVeiculo();
-        int anoApolice = apolice.getDataInicioVigencia().getYear();
+        List<Sinistro> sinistros = daoSin.buscarTodos();
+        final Veiculo veiculo = apolice.getVeiculo();
+        final int ano = apolice.getDataInicioVigencia().getYear();
 
-        boolean temSinistroMesmoAno = daoSin.buscarTodos().stream()
+        boolean conflito = sinistros.stream()
                 .anyMatch(s -> s.getVeiculo().equals(veiculo)
-                        && s.getDataHora().getYear() == anoApolice);
+                        && s.getDataHora().getYear() == ano);
 
-        if (temSinistroMesmoAno) {
+        if (conflito) {
             return "Existe sinistro cadastrado para o veículo em questão e no mesmo ano da apólice";
         }
 
