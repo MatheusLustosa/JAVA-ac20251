@@ -22,8 +22,11 @@ public abstract class TesteDAO extends TesteAbstrato {
         String sep = File.separator;
         File dir = new File("." + sep + getClasse().getSimpleName());
         File[] files = dir.listFiles();
-        for (File file : files) {
-            file.delete();
+        if (files != null) {
+            for (File file : files) {
+                file.delete();
+            }
         }
     }
+
 }

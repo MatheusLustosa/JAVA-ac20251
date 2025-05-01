@@ -5,14 +5,19 @@ import br.edu.cs.poo.ac.seguro.entidades.SeguradoPessoa;
 
 public class SeguradoPessoaMediator {
 
-    private static SeguradoPessoaMediator instancia = new SeguradoPessoaMediator();
+    private static final SeguradoPessoaMediator instancia = new SeguradoPessoaMediator();
+    private final SeguradoMediator seguradoMediator = SeguradoMediator.getInstancia();
+    private final SeguradoPessoaDAO seguradoPessoaDAO = new SeguradoPessoaDAO();
+
+    private SeguradoPessoaMediator() {}
 
     public static SeguradoPessoaMediator getInstancia() {
         return instancia;
     }
 
-    private final SeguradoMediator seguradoMediator = SeguradoMediator.getInstancia();
-    private final SeguradoPessoaDAO seguradoPessoaDAO = new SeguradoPessoaDAO();
+    public String validarCpf(String cpf) {
+        return ValidadorCpfCnpj.ehCpfValido(cpf);
+    }
 
     public String validarSeguradoPessoa(SeguradoPessoa seg) {
         String msg;
@@ -27,14 +32,18 @@ public class SeguradoPessoaMediator {
         if (msg != null) return msg;
 
         String cpf = seg.getCpf();
-        if (cpf == null || cpf.trim().length() != 11 || !ValidadorCpfCnpj.ehCpfValido(cpf)) {
-            return "CPF inválido. Deve conter 11 dígitos numéricos válidos.";
-        }
+        msg = validarCpf(cpf);
+        if (msg != null) return msg;
 
         if (seg.getRenda() <= 0) {
             return "Renda deve ser maior que zero.";
         }
 
+        return null;
+    }
+    public String validarRenda(double renda) {
+        if (renda < 0)
+            return "Renda deve ser maior ou igual à zero";
         return null;
     }
 
