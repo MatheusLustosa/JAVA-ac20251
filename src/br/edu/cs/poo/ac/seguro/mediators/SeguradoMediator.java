@@ -57,7 +57,7 @@ public class SeguradoMediator {
 
 
     public String validarDataCriacao(LocalDate dataCriacao) {
-        if (dataCriacao == null) return "Data do nascimento deve ser informada";
+        if (dataCriacao == null) return "Data da criação deve ser informada";
         if (dataCriacao.isAfter(LocalDate.now())) return "Data da criação deve ser menor ou igual à data atual";
         return null;
     }

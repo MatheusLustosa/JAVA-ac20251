@@ -27,25 +27,19 @@ public class SeguradoPessoaMediator {
     }
 
     public String validarSeguradoPessoa(SeguradoPessoa seg) {
-        String msg;
-
-        msg = seguradoMediator.validarNome(seg.getNome());
-        if (msg != null) return msg;
-
-        msg = seguradoMediator.validarEndereco(seg.getEndereco());
-        if (msg != null) return msg;
-
-        msg = seguradoMediator.validarDataCriacao(seg.getDataNascimento());
-        if (msg != null) return msg;
-
-        String cpf = seg.getCpf();
-        msg = validarCpf(cpf);
-        if (msg != null) return msg;
-
-        if (seg.getRenda() <= 0) {
-            return "Renda deve ser maior ou igual à zero";
-        }
-
+        if (seg == null) return "Segurado não pode ser nulo";
+        if (StringUtils.ehNuloOuBranco(seg.getNome()))
+            return "Nome deve ser informado";
+        if (seg.getEndereco() == null)
+            return "Endereço deve ser informado";
+        if (seg.getDataNascimento() == null)
+            return "Data do nascimento deve ser informada";
+        String erroCpf = validarCpf(seg.getCpf());
+        if (erroCpf != null)
+            return erroCpf;
+        String erroRenda = validarRenda(seg.getRenda());
+        if (erroRenda != null)
+            return erroRenda;
         return null;
     }
     public String validarRenda(double renda) {

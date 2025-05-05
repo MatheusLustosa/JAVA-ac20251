@@ -24,7 +24,10 @@ public class ApoliceMediator {
     private ApoliceMediator() {}
 
     public RetornoInclusaoApolice incluirApolice(DadosVeiculo dados) {
-        if (dados == null || dados.getPlaca() == null || dados.getPlaca().trim().isEmpty()) {
+        if (dados == null) {
+            return new RetornoInclusaoApolice(null, "Placa do veículo deve ser informada");
+        }
+        if (dados.getPlaca() == null || dados.getPlaca().trim().isEmpty()) {
             return new RetornoInclusaoApolice(null, "Placa do veículo deve ser informada");
         }
 
@@ -51,7 +54,7 @@ public class ApoliceMediator {
 
         BigDecimal valorMaximoPermitido = obterValorMaximoPermitido(dados.getAno(), dados.getCodigoCategoria());
         if (valorMaximoPermitido == null) {
-            return new RetornoInclusaoApolice(null, "Valor máximo não permitido");
+            return new RetornoInclusaoApolice(null, "Valor máximo segurado deve ser informado");
         }
 
         BigDecimal minimoPermitido = valorMaximoPermitido.multiply(BigDecimal.valueOf(0.75));
@@ -105,17 +108,22 @@ public class ApoliceMediator {
         daoApo.incluir(apolice);
 
         List<Sinistro> sinistros = daoSin.buscarTodos();
-        final Veiculo veiculoFinal = veiculo;
+        final String placa = veiculo.getPlaca();
         boolean teveSinistroAnterior = sinistros.stream()
-                .anyMatch(s -> s.getVeiculo().equals(veiculoFinal)
+                .anyMatch(s -> s.getVeiculo().getPlaca().equals(placa)
                         && s.getDataHora().getYear() == dataInicio.minusYears(1).getYear());
-
-        if (!teveSinistroAnterior) {
-            BigDecimal bonusAdicional = premio.multiply(BigDecimal.valueOf(0.3)).setScale(2, RoundingMode.HALF_UP);
-            if (isCpf) {
+        boolean teveSinistroAnoAtual = sinistros.stream()
+                .anyMatch(s -> s.getVeiculo().getPlaca().equals(placa)
+                        && s.getDataHora().getYear() == dataInicio.getYear());
+        if (isCpf) {
+            if (!teveSinistroAnterior && !teveSinistroAnoAtual) {
+                BigDecimal bonusAdicional = premio.multiply(BigDecimal.valueOf(0.3)).setScale(2, RoundingMode.HALF_UP);
                 sp.creditarBonus(bonusAdicional);
                 daoSegPes.alterar(sp);
-            } else {
+            }
+        } else {
+            if (!teveSinistroAnterior) {
+                BigDecimal bonusAdicional = premio.multiply(BigDecimal.valueOf(0.3)).setScale(2, RoundingMode.HALF_UP);
                 se.creditarBonus(bonusAdicional);
                 daoSegEmp.alterar(se);
             }
