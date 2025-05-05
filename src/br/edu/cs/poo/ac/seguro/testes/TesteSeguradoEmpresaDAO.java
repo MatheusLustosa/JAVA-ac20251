@@ -1,6 +1,5 @@
 package br.edu.cs.poo.ac.seguro.testes;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -19,7 +18,7 @@ public class TesteSeguradoEmpresaDAO extends TesteDAO {
     @Test
     public void teste01() {
         String cnpj = "00000000";
-        cadastro.incluir((Serializable) new SeguradoEmpresa("TESTE1", null, LocalDate.now(), BigDecimal.ZERO,
+        cadastro.incluir(new SeguradoEmpresa("TESTE1", null, LocalDate.now(), BigDecimal.ZERO,
                 cnpj, 1000.0, false), cnpj);
         SeguradoEmpresa seg = dao.buscar(cnpj);
         Assertions.assertNotNull(seg);
@@ -27,7 +26,7 @@ public class TesteSeguradoEmpresaDAO extends TesteDAO {
     @Test
     public void teste02() {
         String cnpj = "10000000";
-        cadastro.incluir((Serializable) new SeguradoEmpresa("TESTE2", null, LocalDate.now(), BigDecimal.ZERO,
+        cadastro.incluir(new SeguradoEmpresa("TESTE2", null, LocalDate.now(), BigDecimal.ZERO,
                 cnpj, 1001.0, false), cnpj);
         SeguradoEmpresa seg = dao.buscar("11000000");
         Assertions.assertNull(seg);
@@ -35,7 +34,7 @@ public class TesteSeguradoEmpresaDAO extends TesteDAO {
     @Test
     public void teste03() {
         String cnpj = "22000000";
-        cadastro.incluir((Serializable) new SeguradoEmpresa("TESTE3", null, LocalDate.now(), BigDecimal.ZERO,
+        cadastro.incluir(new SeguradoEmpresa("TESTE3", null, LocalDate.now(), BigDecimal.ZERO,
                 cnpj, 1002.0, false), cnpj);
         boolean ret = dao.excluir(cnpj);
         Assertions.assertTrue(ret);
@@ -43,7 +42,7 @@ public class TesteSeguradoEmpresaDAO extends TesteDAO {
     @Test
     public void teste04() {
         String cnpj = "33000000";
-        cadastro.incluir((Serializable) new SeguradoEmpresa("TESTE4", null, LocalDate.now(), BigDecimal.ZERO,
+        cadastro.incluir(new SeguradoEmpresa("TESTE4", null, LocalDate.now(), BigDecimal.ZERO,
                 cnpj, 1003.0, false), cnpj);
         boolean ret = dao.excluir("33100000");
         Assertions.assertFalse(ret);
