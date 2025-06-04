@@ -9,11 +9,11 @@ public class RetornoInclusaoApolice {
     public RetornoInclusaoApolice(String numeroApolice, String mensagemErro) {
         if (numeroApolice == null && mensagemErro == null) {
             throw new RuntimeException(
-                    "Número da apólice e mensagem de erro não podem ser ambas nulas");
+                    "N�mero da ap�lice e mensagem de erro n�o podem ser ambas nulas");
         }
         if (numeroApolice != null && mensagemErro != null) {
             throw new RuntimeException(
-                    "Número da apólice e mensagem de erro não podem ser ambas preenchidas");
+                    "N�mero da ap�lice e mensagem de erro n�o podem ser ambas preenchidas");
         }
         this.numeroApolice = numeroApolice;
         this.mensagemErro = mensagemErro;
