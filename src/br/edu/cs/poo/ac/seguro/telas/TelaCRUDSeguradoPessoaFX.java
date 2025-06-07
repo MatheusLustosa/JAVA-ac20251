@@ -1,6 +1,4 @@
-package br.edu.cs.poo.ac.seguro.telas;
-
-
+package br.edu.cs.poo.ac.seguro.testes;
 
 import br.edu.cs.poo.ac.seguro.daos.SeguradoPessoaDAO;
 import br.edu.cs.poo.ac.seguro.entidades.Endereco;
@@ -19,10 +17,14 @@ import javafx.stage.Stage;
 import javafx.scene.control.TextFormatter.Change;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
@@ -30,14 +32,12 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
 
     private SeguradoPessoaDAO seguradoPessoaDAO;
 
-    // Campos de Segurado Pessoa
     private TextField txtCpf;
     private TextField txtNome;
-    private TextField txtDataNascimento; // Corrigido para dataNascimento
+    private TextField txtDataNascimento;
     private TextField txtBonus;
-    private TextField txtRenda; // NOVO CAMPO para a renda
+    private TextField txtRenda;
 
-    // Campos de Endereco
     private TextField txtLogradouro;
     private TextField txtNumero;
     private TextField txtComplemento;
@@ -47,22 +47,25 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
     private TextField txtCep;
     private TextField txtPais;
 
-    // Botões
     private Button btnBuscar;
     private Button btnIncluir;
     private Button btnAlterar;
     private Button btnExcluir;
     private Button btnLimpar;
 
-    // Estados da tela
     private enum EstadoTela {
         INICIAL, BUSCA_SUCESSO, INCLUSAO_NOVO
     }
     private EstadoTela estadoAtual;
 
-    // Formatters
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0.00");
+
+    private static final DecimalFormat CURRENCY_FORMATTER_BR = (DecimalFormat) NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+
+    static {
+        CURRENCY_FORMATTER_BR.applyPattern("#,##0.00");
+        CURRENCY_FORMATTER_BR.setParseBigDecimal(true);
+    }
 
     public TelaCRUDSeguradoPessoaFX() {
         this.seguradoPessoaDAO = new SeguradoPessoaDAO();
@@ -84,14 +87,14 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         setupTabOrder();
         setEstado(EstadoTela.INICIAL);
 
-        Scene scene = new Scene(grid, 600, 650); // Tamanho ajustado para acomodar o novo campo
+        Scene scene = new Scene(grid, 600, 650);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
     private void initComponents() {
         txtCpf = new TextField();
-        txtCpf.setPromptText("Ex: 12345678909");
+        txtCpf.setPromptText("Ex: 123.456.789-00");
         txtCpf.setMaxWidth(150);
         setupCpfMask(txtCpf);
 
@@ -99,22 +102,21 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         txtNome.setPromptText("Nome Completo");
         txtNome.setMaxWidth(250);
 
-        txtDataNascimento = new TextField(); // Nome do campo ajustado
+        txtDataNascimento = new TextField();
         txtDataNascimento.setPromptText("dd/MM/yyyy");
         txtDataNascimento.setMaxWidth(100);
         setupDateMask(txtDataNascimento);
 
         txtBonus = new TextField();
-        txtBonus.setPromptText("Ex: 100.00");
+        txtBonus.setPromptText("Ex: 100,00");
         txtBonus.setMaxWidth(100);
         setupCurrencyMask(txtBonus);
 
-        txtRenda = new TextField(); // Inicialização do novo campo
-        txtRenda.setPromptText("Ex: 5000.00");
+        txtRenda = new TextField();
+        txtRenda.setPromptText("Ex: 5.000,00");
         txtRenda.setMaxWidth(100);
-        setupCurrencyMask(txtRenda); // Reutiliza máscara de moeda, ou pode criar uma para double
+        setupCurrencyMask(txtRenda);
 
-        // Campos de Endereco (inalterados)
         txtLogradouro = new TextField();
         txtLogradouro.setPromptText("Rua, Av., Alameda...");
         txtLogradouro.setMaxWidth(250);
@@ -126,8 +128,6 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         txtComplemento = new TextField();
         txtComplemento.setPromptText("Apto, Bloco, Casa");
         txtComplemento.setMaxWidth(150);
-
-
 
         txtCidade = new TextField();
         txtCidade.setPromptText("Cidade");
@@ -164,7 +164,7 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         grid.add(txtNome, 1, row, 2, 1);
         row++;
 
-        grid.add(new Label("Data Nasc.:"), 0, row); // Label ajustado
+        grid.add(new Label("Data Nasc.:"), 0, row);
         grid.add(txtDataNascimento, 1, row);
         row++;
 
@@ -172,7 +172,7 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         grid.add(txtBonus, 1, row);
         row++;
 
-        grid.add(new Label("Renda:"), 0, row); // Layout do novo campo
+        grid.add(new Label("Renda:"), 0, row);
         grid.add(txtRenda, 1, row);
         row++;
 
@@ -192,8 +192,6 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         grid.add(new Label("Complemento:"), 0, row);
         grid.add(txtComplemento, 1, row, 2, 1);
         row++;
-
-
 
         grid.add(new Label("Cidade:"), 0, row);
         grid.add(txtCidade, 1, row);
@@ -223,14 +221,27 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         btnAlterar.setOnAction(e -> alterarSegurado());
         btnExcluir.setOnAction(e -> excluirSegurado());
         btnLimpar.setOnAction(e -> limparCampos());
+
+        txtCpf.setOnKeyPressed(e -> txtCpf.setStyle(""));
+        txtNome.setOnKeyPressed(e -> txtNome.setStyle(""));
+        txtDataNascimento.setOnKeyPressed(e -> txtDataNascimento.setStyle(""));
+        txtBonus.setOnKeyPressed(e -> txtBonus.setStyle(""));
+        txtRenda.setOnKeyPressed(e -> txtRenda.setStyle(""));
+        txtLogradouro.setOnKeyPressed(e -> txtLogradouro.setStyle(""));
+        txtNumero.setOnKeyPressed(e -> txtNumero.setStyle(""));
+        txtComplemento.setOnKeyPressed(e -> txtComplemento.setStyle(""));
+        txtCidade.setOnKeyPressed(e -> txtCidade.setStyle(""));
+        txtEstado.setOnKeyPressed(e -> txtEstado.setStyle(""));
+        txtCep.setOnKeyPressed(e -> txtCep.setStyle(""));
+        txtPais.setOnKeyPressed(e -> txtPais.setStyle(""));
     }
 
     private void setupTabOrder() {
         txtCpf.setFocusTraversable(true);
         txtNome.setFocusTraversable(true);
-        txtDataNascimento.setFocusTraversable(true); // Ajustado
+        txtDataNascimento.setFocusTraversable(true);
         txtBonus.setFocusTraversable(true);
-        txtRenda.setFocusTraversable(true); // NOVO CAMPO na ordem de tabulação
+        txtRenda.setFocusTraversable(true);
         txtLogradouro.setFocusTraversable(true);
         txtNumero.setFocusTraversable(true);
         txtComplemento.setFocusTraversable(true);
@@ -246,11 +257,10 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         btnLimpar.setFocusTraversable(true);
     }
 
-    // --- Controle de Estados da Tela ---
     private void setEstado(EstadoTela estado) {
         this.estadoAtual = estado;
         boolean cpfEditavel = false;
-        boolean camposEditaveis = false; // Todos os campos de Nome, Data, Bônus, Endereço, Renda
+        boolean camposEditaveis = false;
         boolean btnBuscarHabilitado = false;
         boolean btnIncluirHabilitado = false;
         boolean btnAlterarHabilitado = false;
@@ -277,9 +287,9 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
 
         txtCpf.setEditable(cpfEditavel);
         txtNome.setEditable(camposEditaveis);
-        txtDataNascimento.setEditable(camposEditaveis); // Ajustado
+        txtDataNascimento.setEditable(camposEditaveis);
         txtBonus.setEditable(camposEditaveis);
-        txtRenda.setEditable(camposEditaveis); // NOVO CAMPO: editabilidade
+        txtRenda.setEditable(camposEditaveis);
         txtLogradouro.setEditable(camposEditaveis);
         txtNumero.setEditable(camposEditaveis);
         txtComplemento.setEditable(camposEditaveis);
@@ -296,21 +306,63 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         btnLimpar.setDisable(!btnLimparHabilitado);
     }
 
-    // --- Métodos de Validação de Formato e Máscaras --- (inalterados, apenas usando o novo campo)
-
     private void setupCpfMask(TextField textField) {
-        Pattern pattern = Pattern.compile("\\d*");
-        UnaryOperator<Change> filter = c -> {
-            if (pattern.matcher(c.getControlNewText()).matches()) {
-                if (c.getControlNewText().length() > 11) return null;
-                return c;
-            } else {
+        textField.setTextFormatter(new TextFormatter<String>(change -> {
+            String newText = change.getControlNewText();
+            String cleanedText = newText.replaceAll("\\D", "");
+
+            if (cleanedText.length() > 11) {
                 return null;
             }
-        };
 
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        textField.setTextFormatter(textFormatter);
+            StringBuilder formattedText = new StringBuilder();
+            for (int i = 0; i < cleanedText.length(); i++) {
+                formattedText.append(cleanedText.charAt(i));
+                if (i == 2 || i == 5) {
+                    if (cleanedText.length() > i + 1) formattedText.append(".");
+                } else if (i == 8) {
+                    if (cleanedText.length() > i + 1) formattedText.append("-");
+                }
+            }
+
+            change.setText(formattedText.toString());
+            change.setRange(0, change.getControlText().length());
+            change.setCaretPosition(formattedText.length());
+            change.setAnchor(formattedText.length());
+
+            return change;
+        }));
+
+        textField.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                String text = textField.getText().trim();
+                String cleanCpf = text.replaceAll("\\D", "");
+                if (!cleanCpf.isEmpty()) {
+                    if (ValidadorCpfCnpj.ehCpfValido(cleanCpf)) {
+                        textField.setStyle("");
+                        if (cleanCpf.length() == 11) {
+                            textField.setText(formatCpf(cleanCpf));
+                        }
+                    } else {
+                        textField.setStyle("-fx-border-color: red;");
+                        showAlert(Alert.AlertType.ERROR, "Erro de Validação", "CPF inválido.");
+                    }
+                } else {
+                    textField.setStyle("");
+                }
+            }
+        });
+    }
+
+    private String formatCpf(String cpf) {
+        if (cpf == null || cpf.replaceAll("\\D", "").length() != 11) {
+            return cpf;
+        }
+        String cleanCpf = cpf.replaceAll("\\D", "");
+        return cleanCpf.substring(0, 3) + "." +
+                cleanCpf.substring(3, 6) + "." +
+                cleanCpf.substring(6, 9) + "-" +
+                cleanCpf.substring(9, 11);
     }
 
     private void setupDateMask(TextField textField) {
@@ -348,13 +400,13 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
     private void setupCurrencyMask(TextField textField) {
         Pattern pattern = Pattern.compile("[0-9.,]*");
         UnaryOperator<Change> filter = c -> {
-            if (pattern.matcher(c.getControlNewText()).matches()) {
+            String newText = c.getControlNewText();
+            if (newText.matches("\\d*([.]\\d{3})*([,]\\d{0,2})?")) {
                 return c;
             } else {
                 return null;
             }
         };
-
         TextFormatter<String> textFormatter = new TextFormatter<>(filter);
         textField.setTextFormatter(textFormatter);
 
@@ -363,13 +415,14 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
                 String text = textField.getText().trim();
                 if (!text.isEmpty()) {
                     try {
-                        String cleanText = text.replace(".", "").replace(",", ".");
-                        new BigDecimal(cleanText);
-                        textField.setText(DECIMAL_FORMAT.format(new BigDecimal(cleanText)));
+                        Number parsedNumber = CURRENCY_FORMATTER_BR.parse(text);
+                        BigDecimal value = new BigDecimal(parsedNumber.doubleValue()).setScale(2, RoundingMode.HALF_UP);
+                        textField.setText(CURRENCY_FORMATTER_BR.format(value));
                         textField.setStyle("");
-                    } catch (NumberFormatException e) {
+                    } catch (ParseException | NumberFormatException e) {
                         textField.setStyle("-fx-border-color: red;");
-                        showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Valor inválido. Use apenas números, vírgula para centavos e ponto para milhares (opcional).");
+                        showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Valor inválido. Por favor, use o formato brasileiro (ex: 1.234,56).");
+                        return;
                     }
                 } else {
                     textField.setStyle("");
@@ -394,9 +447,6 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
                     formattedText.append("-");
                 }
             }
-
-
-
 
             change.setText(formattedText.toString());
             change.setRange(0, change.getControlText().length());
@@ -426,30 +476,36 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
     }
 
     private String formatCep(String cep) {
-        if (cep == null || cep.length() != 8) {
+        if (cep == null || cep.replaceAll("\\D", "").length() != 8) {
             return cep;
         }
-        return cep.substring(0, 5) + "-" + cep.substring(5, 8);
+        String cleanCep = cep.replaceAll("\\D", "");
+        return cleanCep.substring(0, 5) + "-" + cleanCep.substring(5, 8);
     }
 
-
-    // --- Operações CRUD ---
+    private String cleanCep(String cep) {
+        return cep != null ? cep.replaceAll("\\D", "") : null;
+    }
 
     private void buscarSegurado() {
         String cpf = txtCpf.getText().trim();
 
         if (StringUtils.ehNuloOuBranco(cpf)) {
             showAlert(Alert.AlertType.WARNING, "Busca", "CPF deve ser informado para a busca.");
-            setEstado(EstadoTela.INICIAL);
-            return;
-        }
-        if (!ValidadorCpfCnpj.ehCpfValido(cpf)) {
-            showAlert(Alert.AlertType.ERROR, "Busca", "CPF inválido, deve ter no minimo 11 digitos.");
+            txtCpf.setStyle("-fx-border-color: orange;");
             setEstado(EstadoTela.INICIAL);
             return;
         }
 
-        SeguradoPessoa segurado = seguradoPessoaDAO.buscar(cpf);
+        String cleanCpf = cpf.replaceAll("\\D", "");
+        if (!ValidadorCpfCnpj.ehCpfValido(cleanCpf)) {
+            showAlert(Alert.AlertType.ERROR, "Busca", "CPF inválido.");
+            txtCpf.setStyle("-fx-border-color: red;");
+            setEstado(EstadoTela.INICIAL);
+            return;
+        }
+
+        SeguradoPessoa segurado = seguradoPessoaDAO.buscar(cleanCpf);
 
         if (segurado != null) {
             preencherCampos(segurado);
@@ -457,6 +513,7 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
             showAlert(Alert.AlertType.INFORMATION, "Busca", "Segurado Pessoa encontrado!");
         } else {
             limparCamposComCPF();
+            txtCpf.setText(formatCpf(cleanCpf));
             setEstado(EstadoTela.INCLUSAO_NOVO);
             showAlert(Alert.AlertType.INFORMATION, "Busca", "Segurado Pessoa não encontrado. Você pode incluí-lo.");
             txtNome.requestFocus();
@@ -464,16 +521,16 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
     }
 
     private void incluirSegurado() {
-        String cpf = txtCpf.getText().trim();
-        // Validar todos os campos antes de incluir
-        if (validarCamposComuns() && validarCamposEndereco() && validarCpfCnpjParaInclusao(cpf)) {
+        String cpf = txtCpf.getText().trim().replaceAll("\\D", "");
+        if (validarCamposComuns() && validarCamposEndereco() && validarCpfParaInclusao(cpf)) {
             try {
                 Endereco endereco = criarObjetoEndereco();
-                LocalDate dataNascimento = LocalDate.parse(txtDataNascimento.getText().trim(), DATE_FORMATTER); // Ajustado para dataNascimento
-                BigDecimal bonus = new BigDecimal(txtBonus.getText().trim().replace(".", "").replace(",", "."));
-                double renda = Double.parseDouble(txtRenda.getText().trim().replace(".", "").replace(",", ".")); // Lendo a renda como double
+                LocalDate dataNascimento = LocalDate.parse(txtDataNascimento.getText().trim(), DATE_FORMATTER);
 
-                // AQUI ESTÁ A CORREÇÃO NA ORDEM E PARÂMETROS DO CONSTRUTOR:
+                BigDecimal bonus = (BigDecimal) CURRENCY_FORMATTER_BR.parse(txtBonus.getText().trim());
+                BigDecimal rendaBigDecimal = (BigDecimal) CURRENCY_FORMATTER_BR.parse(txtRenda.getText().trim());
+                double renda = rendaBigDecimal.doubleValue();
+
                 SeguradoPessoa novoSegurado = new SeguradoPessoa(
                         txtNome.getText().trim(),
                         endereco,
@@ -489,8 +546,8 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Inclusão", "Erro ao incluir segurado Pessoa (CPF já existe ou erro de persistência).");
                 }
-            } catch (NumberFormatException | DateTimeParseException e) {
-                showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Verifique os formatos de Data de Nascimento, Bônus e Renda."); // Mensagem ajustada
+            } catch (ParseException e) {
+                showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Verifique os formatos de Data de Nascimento, Bônus e Renda. Use dd/MM/yyyy para data e formato brasileiro para valores monetários (ex: 1.234,56).");
             } catch (Exception e) {
                 showAlert(Alert.AlertType.ERROR, "Erro", "Ocorreu um erro inesperado: " + e.getMessage());
                 e.printStackTrace();
@@ -499,15 +556,16 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
     }
 
     private void alterarSegurado() {
-        String cpf = txtCpf.getText().trim();
+        String cpf = txtCpf.getText().trim().replaceAll("\\D", "");
         if (validarCamposComuns() && validarCamposEndereco()) {
             try {
                 Endereco endereco = criarObjetoEndereco();
-                LocalDate dataNascimento = LocalDate.parse(txtDataNascimento.getText().trim(), DATE_FORMATTER); // Ajustado para dataNascimento
-                BigDecimal bonus = new BigDecimal(txtBonus.getText().trim().replace(".", "").replace(",", "."));
-                double renda = Double.parseDouble(txtRenda.getText().trim().replace(".", "").replace(",", ".")); // Lendo a renda como double
+                LocalDate dataNascimento = LocalDate.parse(txtDataNascimento.getText().trim(), DATE_FORMATTER);
 
-                // AQUI ESTÁ A CORREÇÃO NA ORDEM E PARÂMETROS DO CONSTRUTOR:
+                BigDecimal bonus = (BigDecimal) CURRENCY_FORMATTER_BR.parse(txtBonus.getText().trim());
+                BigDecimal rendaBigDecimal = (BigDecimal) CURRENCY_FORMATTER_BR.parse(txtRenda.getText().trim());
+                double renda = rendaBigDecimal.doubleValue();
+
                 SeguradoPessoa seguradoAlterado = new SeguradoPessoa(
                         txtNome.getText().trim(),
                         endereco,
@@ -523,8 +581,8 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
                 } else {
                     showAlert(Alert.AlertType.ERROR, "Alteração", "Erro ao alterar segurado Pessoa (CPF não encontrado ou erro de persistência).");
                 }
-            } catch (NumberFormatException | DateTimeParseException e) {
-                showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Verifique os formatos de Data de Nascimento, Bônus e Renda."); // Mensagem ajustada
+            } catch (ParseException e) {
+                showAlert(Alert.AlertType.ERROR, "Erro de Formato", "Verifique os formatos de Data de Nascimento, Bônus e Renda. Use dd/MM/yyyy para data e formato brasileiro para valores monetários (ex: 1.234,56).");
             } catch (Exception e) {
                 showAlert(Alert.AlertType.ERROR, "Erro", "Ocorreu um erro inesperado: " + e.getMessage());
                 e.printStackTrace();
@@ -533,15 +591,16 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
     }
 
     private void excluirSegurado() {
-        String cpf = txtCpf.getText().trim();
+        String cpf = txtCpf.getText().trim().replaceAll("\\D", "");
         if (StringUtils.ehNuloOuBranco(cpf) || !ValidadorCpfCnpj.ehCpfValido(cpf)) {
             showAlert(Alert.AlertType.ERROR, "Exclusão", "CPF inválido para exclusão.");
+            txtCpf.setStyle("-fx-border-color: red;");
             return;
         }
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmar Exclusão",
                 ButtonType.YES, ButtonType.NO);
-        alert.setHeaderText("Tem certeza que deseja excluir o segurado " + cpf + "?");
+        alert.setHeaderText("Tem certeza que deseja excluir o segurado pessoa " + formatCpf(cpf) + "?");
         alert.showAndWait();
 
         if (alert.getResult() == ButtonType.YES) {
@@ -557,9 +616,9 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
     private void limparCampos() {
         txtCpf.clear();
         txtNome.clear();
-        txtDataNascimento.clear(); // Ajustado
+        txtDataNascimento.clear();
         txtBonus.clear();
-        txtRenda.clear(); // Limpeza do novo campo
+        txtRenda.clear();
         txtLogradouro.clear();
         txtNumero.clear();
         txtComplemento.clear();
@@ -570,13 +629,14 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         txtPais.clear();
         setEstado(EstadoTela.INICIAL);
         txtCpf.requestFocus();
+        clearAllFieldStyles();
     }
 
     private void limparCamposComCPF() {
         txtNome.clear();
-        txtDataNascimento.clear(); // Ajustado
+        txtDataNascimento.clear();
         txtBonus.clear();
-        txtRenda.clear(); // Limpeza do novo campo
+        txtRenda.clear();
         txtLogradouro.clear();
         txtNumero.clear();
         txtComplemento.clear();
@@ -585,41 +645,41 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         txtEstado.clear();
         txtCep.clear();
         txtPais.clear();
+        clearAllFieldStylesExceptCpf();
     }
 
     private void preencherCampos(SeguradoPessoa segurado) {
-        txtCpf.setText(segurado.getCpf());
+        txtCpf.setText(formatCpf(segurado.getCpf()));
         txtNome.setText(segurado.getNome());
-        txtDataNascimento.setText(segurado.getDataNascimento().format(DATE_FORMATTER)); // Ajustado para getDataNascimento
-        txtBonus.setText(DECIMAL_FORMAT.format(segurado.getBonus()));
-        txtRenda.setText(DECIMAL_FORMAT.format(segurado.getRenda())); // Preenchimento do novo campo
+        txtDataNascimento.setText(segurado.getDataNascimento().format(DATE_FORMATTER));
+        txtBonus.setText(CURRENCY_FORMATTER_BR.format(segurado.getBonus()));
+        txtRenda.setText(CURRENCY_FORMATTER_BR.format(segurado.getRenda()));
 
         Endereco endereco = segurado.getEndereco();
         if (endereco != null) {
             txtLogradouro.setText(endereco.getLogradouro());
             txtNumero.setText(endereco.getNumero());
             txtComplemento.setText(endereco.getComplemento());
-
             txtCidade.setText(endereco.getCidade());
             txtEstado.setText(endereco.getEstado());
-            txtCep.setText(endereco.getCep());
+            txtCep.setText(formatCep(endereco.getCep()));
             txtPais.setText(endereco.getPais());
         } else {
             txtLogradouro.clear();
             txtNumero.clear();
             txtComplemento.clear();
-
             txtCidade.clear();
             txtEstado.clear();
             txtCep.clear();
             txtPais.clear();
         }
+        clearAllFieldStyles();
     }
 
     private Endereco criarObjetoEndereco() {
         return new Endereco(
                 txtLogradouro.getText().trim(),
-                txtCep.getText().trim().replace("-", ""),
+                cleanCep(txtCep.getText()),
                 txtNumero.getText().trim(),
                 txtComplemento.getText().trim(),
                 txtPais.getText().trim(),
@@ -628,105 +688,152 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         );
     }
 
-    // --- Validações de Campos Comuns ---
     private boolean validarCamposComuns() {
+        boolean isValid = true;
+
         if (StringUtils.ehNuloOuBranco(txtNome.getText())) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "Nome deve ser informado.");
-            return false;
-        }
-        if (txtDataNascimento.getStyle().contains("red")) { // Checa se a máscara já marcou como erro
-            showAlert(Alert.AlertType.ERROR, "Validação", "Data de Nascimento inválida."); // Mensagem ajustada
-            return false;
-        }
-        if (StringUtils.ehNuloOuBranco(txtDataNascimento.getText())) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "Data de Nascimento deve ser informada."); // Mensagem ajustada
-            return false;
-        }
-        if (txtBonus.getStyle().contains("red")) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "Bônus inválido.");
-            return false;
-        }
-        if (StringUtils.ehNuloOuBranco(txtBonus.getText())) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "Bônus deve ser informado.");
-            return false;
-        }
-        try {
-            BigDecimal bonus = new BigDecimal(txtBonus.getText().trim().replace(".", "").replace(",", "."));
-            if (bonus.compareTo(BigDecimal.ZERO) < 0) {
-                showAlert(Alert.AlertType.ERROR, "Validação", "Bônus não pode ser negativo.");
-                return false;
-            }
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "Formato de bônus inválido.");
-            return false;
+            txtNome.setStyle("-fx-border-color: red;");
+            showAlert(Alert.AlertType.ERROR, "Validação", "Nome completo deve ser informado.");
+            isValid = false;
+        } else {
+            txtNome.setStyle("");
         }
 
-        // Validação da Renda
-        if (txtRenda.getStyle().contains("red")) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "Renda inválida.");
-            return false;
-        }
-        if (StringUtils.ehNuloOuBranco(txtRenda.getText())) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "Renda deve ser informada.");
-            return false;
-        }
-        try {
-            double renda = Double.parseDouble(txtRenda.getText().trim().replace(".", "").replace(",", "."));
-            if (renda <= 0) {
-                showAlert(Alert.AlertType.ERROR, "Validação", "Renda deve ser maior que zero.");
-                return false;
+        if (StringUtils.ehNuloOuBranco(txtDataNascimento.getText())) {
+            txtDataNascimento.setStyle("-fx-border-color: red;");
+            showAlert(Alert.AlertType.ERROR, "Validação", "Data de Nascimento deve ser informada.");
+            isValid = false;
+        } else {
+            try {
+                LocalDate.parse(txtDataNascimento.getText().trim(), DATE_FORMATTER);
+                txtDataNascimento.setStyle("");
+            } catch (DateTimeParseException e) {
+                txtDataNascimento.setStyle("-fx-border-color: red;");
+                showAlert(Alert.AlertType.ERROR, "Validação", "Data de Nascimento inválida. Use o formato dd/MM/yyyy.");
+                isValid = false;
             }
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "Formato de renda inválido.");
-            return false;
         }
-        return true;
+
+        if (StringUtils.ehNuloOuBranco(txtBonus.getText())) {
+            txtBonus.setStyle("-fx-border-color: red;");
+            showAlert(Alert.AlertType.ERROR, "Validação", "Bônus deve ser informado.");
+            isValid = false;
+        } else {
+            try {
+                BigDecimal bonus = (BigDecimal) CURRENCY_FORMATTER_BR.parse(txtBonus.getText().trim());
+                if (bonus.compareTo(BigDecimal.ZERO) < 0) {
+                    txtBonus.setStyle("-fx-border-color: red;");
+                    showAlert(Alert.AlertType.ERROR, "Validação", "Bônus não pode ser negativo.");
+                    isValid = false;
+                } else {
+                    txtBonus.setStyle("");
+                }
+            } catch (ParseException | NumberFormatException e) {
+                txtBonus.setStyle("-fx-border-color: red;");
+                showAlert(Alert.AlertType.ERROR, "Validação", "Formato de bônus inválido. Use o formato brasileiro (ex: 1.234,56).");
+                isValid = false;
+            }
+        }
+
+        if (StringUtils.ehNuloOuBranco(txtRenda.getText())) {
+            txtRenda.setStyle("-fx-border-color: red;");
+            showAlert(Alert.AlertType.ERROR, "Validação", "Renda deve ser informada.");
+            isValid = false;
+        } else {
+            try {
+                BigDecimal renda = (BigDecimal) CURRENCY_FORMATTER_BR.parse(txtRenda.getText().trim());
+                if (renda.compareTo(BigDecimal.ZERO) <= 0) {
+                    txtRenda.setStyle("-fx-border-color: red;");
+                    showAlert(Alert.AlertType.ERROR, "Validação", "Renda deve ser maior que zero.");
+                    isValid = false;
+                } else {
+                    txtRenda.setStyle("");
+                }
+            } catch (ParseException | NumberFormatException e) {
+                txtRenda.setStyle("-fx-border-color: red;");
+                showAlert(Alert.AlertType.ERROR, "Validação", "Formato de renda inválido. Use o formato brasileiro (ex: 1.234.567,89).");
+                isValid = false;
+            }
+        }
+
+        if (!validarCamposEndereco()) {
+            isValid = false;
+        }
+
+        return isValid;
     }
 
     private boolean validarCamposEndereco() {
+        boolean isValid = true;
+
         if (StringUtils.ehNuloOuBranco(txtLogradouro.getText())) {
+            txtLogradouro.setStyle("-fx-border-color: red;");
             showAlert(Alert.AlertType.ERROR, "Validação", "Logradouro deve ser informado.");
-            return false;
+            isValid = false;
+        } else {
+            txtLogradouro.setStyle("");
         }
+
         if (StringUtils.ehNuloOuBranco(txtNumero.getText())) {
+            txtNumero.setStyle("-fx-border-color: red;");
             showAlert(Alert.AlertType.ERROR, "Validação", "Número deve ser informado.");
-            return false;
+            isValid = false;
+        } else {
+            txtNumero.setStyle("");
         }
-        if (txtCep.getStyle().contains("red")) {
-            showAlert(Alert.AlertType.ERROR, "Validação", "CEP inválido.");
-            return false;
-        }
+
+        String cleanCep = txtCep.getText().trim().replaceAll("\\D", "");
         if (StringUtils.ehNuloOuBranco(txtCep.getText())) {
+            txtCep.setStyle("-fx-border-color: red;");
             showAlert(Alert.AlertType.ERROR, "Validação", "CEP deve ser informado.");
-            return false;
+            isValid = false;
+        } else if (cleanCep.length() != 8) {
+            txtCep.setStyle("-fx-border-color: red;");
+            showAlert(Alert.AlertType.ERROR, "Validação", "CEP deve ter 8 dígitos.");
+            isValid = false;
+        } else {
+            txtCep.setStyle("");
         }
+
         if (StringUtils.ehNuloOuBranco(txtCidade.getText())) {
+            txtCidade.setStyle("-fx-border-color: red;");
             showAlert(Alert.AlertType.ERROR, "Validação", "Cidade deve ser informada.");
-            return false;
+            isValid = false;
+        } else {
+            txtCidade.setStyle("");
         }
+
         if (StringUtils.ehNuloOuBranco(txtEstado.getText()) || txtEstado.getText().trim().length() != 2) {
+            txtEstado.setStyle("-fx-border-color: red;");
             showAlert(Alert.AlertType.ERROR, "Validação", "Estado deve ser informado com 2 letras (UF).");
-            return false;
+            isValid = false;
+        } else {
+            txtEstado.setStyle("");
         }
+
         if (StringUtils.ehNuloOuBranco(txtPais.getText())) {
+            txtPais.setStyle("-fx-border-color: red;");
             showAlert(Alert.AlertType.ERROR, "Validação", "País deve ser informado.");
-            return false;
+            isValid = false;
+        } else {
+            txtPais.setStyle("");
         }
-        return true;
+        return isValid;
     }
 
-    private boolean validarCpfCnpjParaInclusao(String cpf) {
+    private boolean validarCpfParaInclusao(String cpf) {
         if (StringUtils.ehNuloOuBranco(cpf)) {
             showAlert(Alert.AlertType.ERROR, "Validação", "CPF deve ser informado.");
+            txtCpf.setStyle("-fx-border-color: red;");
             return false;
         }
         if (!ValidadorCpfCnpj.ehCpfValido(cpf)) {
             showAlert(Alert.AlertType.ERROR, "Validação", "CPF inválido.");
+            txtCpf.setStyle("-fx-border-color: red;");
             return false;
         }
         return true;
     }
-
 
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
@@ -736,59 +843,33 @@ public class TelaCRUDSeguradoPessoaFX extends Application {
         alert.showAndWait();
     }
 
-    public static void main(String[] args) {
-        try {
-            SeguradoPessoaDAO segPesDAO = new SeguradoPessoaDAO();
-
-            // Adicionar Segurado Pessoa para teste (CPF válido e com todos os dados)
-            Endereco endTeste = new Endereco("Rua da Programação", "50000-000", "123", "Casa A", "Brasil", "PE", "Recife");
-            // CONSTRUTOR CORRIGIDO: nome, endereco, dataNascimento, bonus, cpf, renda
-            SeguradoPessoa pessoaTeste = new SeguradoPessoa(
-                    "Fulano de Tal",
-                    endTeste,
-                    LocalDate.of(1990, 1, 1), // Data de Nascimento
-                    new BigDecimal("250.50"),
-                    "11122233344", // CPF
-                    5000.00 // Renda
-            );
-            if (segPesDAO.buscar(pessoaTeste.getIdUnico()) == null) {
-                if (segPesDAO.incluir(pessoaTeste)) {
-                    System.out.println("Segurado Pessoa 11122233344 incluído para teste.");
-                } else {
-                    System.out.println("Erro ao incluir Segurado Pessoa 11122233344.");
-                }
-            } else {
-                System.out.println("Segurado Pessoa 11122233344 já existe.");
-            }
-
-            // Exemplo de outro segurado para teste
-            Endereco endTeste2 = new Endereco("Av. das Codificações", "60000-000", "456", "Apto 202", "Brasil", "SP", "São Paulo");
-            SeguradoPessoa pessoaTeste2 = new SeguradoPessoa(
-                    "Ciclano da Silva",
-                    endTeste2,
-                    LocalDate.of(1985, 7, 15), // Data de Nascimento
-                    new BigDecimal("100.00"),
-                    "55566677788", // CPF
-                    3000.00 // Renda
-            );
-            if (segPesDAO.buscar(pessoaTeste2.getIdUnico()) == null) {
-                if (segPesDAO.incluir(pessoaTeste2)) {
-                    System.out.println("Segurado Pessoa 55566677788 incluído para teste.");
-                } else {
-                    System.out.println("Erro ao incluir Segurado Pessoa 55566677788.");
-                }
-            } else {
-                System.out.println("Segurado Pessoa 55566677788 já existe.");
-            }
-
-
-        } catch (RuntimeException e) {
-            System.err.println("Erro na inicialização dos dados de teste: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Erro inesperado na inicialização: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        launch(args);
+    private void clearAllFieldStyles() {
+        txtCpf.setStyle("");
+        txtNome.setStyle("");
+        txtDataNascimento.setStyle("");
+        txtBonus.setStyle("");
+        txtRenda.setStyle("");
+        txtLogradouro.setStyle("");
+        txtNumero.setStyle("");
+        txtComplemento.setStyle("");
+        txtCidade.setStyle("");
+        txtEstado.setStyle("");
+        txtCep.setStyle("");
+        txtPais.setStyle("");
     }
+
+    private void clearAllFieldStylesExceptCpf() {
+        txtNome.setStyle("");
+        txtDataNascimento.setStyle("");
+        txtBonus.setStyle("");
+        txtRenda.setStyle("");
+        txtLogradouro.setStyle("");
+        txtNumero.setStyle("");
+        txtComplemento.setStyle("");
+        txtCidade.setStyle("");
+        txtEstado.setStyle("");
+        txtCep.setStyle("");
+        txtPais.setStyle("");
+    }
+
 }
